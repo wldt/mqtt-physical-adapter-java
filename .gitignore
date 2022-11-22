@@ -13,3 +13,5 @@ settings.xml
 .env
 *.class
 build
+
+schema.PNG
