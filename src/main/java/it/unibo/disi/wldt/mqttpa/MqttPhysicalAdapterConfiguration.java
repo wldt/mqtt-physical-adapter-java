@@ -20,6 +20,7 @@ public class MqttPhysicalAdapterConfiguration {
     //INCOMING TOPICS: Topics to which the PhysicalAdapter must subscribe
     private final List<IncomingTopic<?>> incomingTopics = new ArrayList<>();
     //OUTGOING TOPICS: Topics on which the PhysicalAdapter must publish
+    //TODO: change type in Map<ActionKey, OutgoingTopic>
     private final List<String> outgoingTopics = new ArrayList<>();
 
     public MqttPhysicalAdapterConfiguration(String brokerAddress, String brokerPort, String clientId) {
@@ -30,6 +31,30 @@ public class MqttPhysicalAdapterConfiguration {
 
     public MqttPhysicalAdapterConfiguration(String brokerAddress, String brokerPort){
         this(brokerAddress, brokerPort, "wldt.mqtt.client."+new Random().nextInt());
+    }
+
+    public String getBrokerAddress() {
+        return brokerAddress;
+    }
+
+    public String getBrokerPort() {
+        return brokerPort;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public boolean getCleanSessionFlag() {
+        return cleanSessionFlag;
     }
 
     public List<IncomingTopic<?>> getIncomingTopics() {
