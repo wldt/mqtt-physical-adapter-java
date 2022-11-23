@@ -1,9 +1,11 @@
 package it.unibo.disi.wldt.mqttpa;
 
 import it.unibo.disi.wldt.mqttpa.topic.DigitalTwinIncomingTopic;
+import it.unibo.disi.wldt.mqttpa.topic.DigitalTwinOutgoingTopic;
 import it.unimore.dipi.iot.wldt.adapter.physical.PhysicalAssetAction;
 import it.unimore.dipi.iot.wldt.adapter.physical.PhysicalAssetEvent;
 import it.unimore.dipi.iot.wldt.adapter.physical.PhysicalAssetProperty;
+import it.unimore.dipi.iot.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
 import org.eclipse.paho.client.mqttv3.MqttClientPersistence;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -28,8 +30,7 @@ public class MqttPhysicalAdapterConfiguration {
     //INCOMING TOPICS: Topics to which the PhysicalAdapter must subscribe
     private final List<DigitalTwinIncomingTopic> incomingTopics = new ArrayList<>();
     //OUTGOING TOPICS: Topics on which the PhysicalAdapter must publish
-    //TODO: change type in Map<ActionKey, OutgoingTopic>
-    private final List<String> outgoingTopics = new ArrayList<>();
+    private final Map<String, DigitalTwinOutgoingTopic> outgoingTopics = new HashMap<>();
 
     public MqttPhysicalAdapterConfiguration(String brokerAddress, Integer brokerPort, String clientId) {
         this.brokerAddress = brokerAddress;
@@ -73,6 +74,14 @@ public class MqttPhysicalAdapterConfiguration {
         return incomingTopics;
     }
 
+    public Map<String, DigitalTwinOutgoingTopic> getOutgoingTopics() {
+        return outgoingTopics;
+    }
+
+    public Optional<DigitalTwinOutgoingTopic> getOutgoingTopicByActionEventType(String type){
+        return outgoingTopics.containsKey(type) ? Optional.of(outgoingTopics.get(type)) : Optional.empty();
+    }
+
     public List<PhysicalAssetProperty<?>> getPhysicalAssetProperties() {
         return physicalAssetProperties;
     }
@@ -87,6 +96,10 @@ public class MqttPhysicalAdapterConfiguration {
 
     public void addIncomingTopic(DigitalTwinIncomingTopic topic){
         this.incomingTopics.add(topic);
+    }
+
+    public void addOutgoingTopic(String actionKey, DigitalTwinOutgoingTopic topic){
+        this.outgoingTopics.put(PhysicalAssetActionWldtEvent.buildEventType(actionKey),topic);
     }
 
 //    public void addIncomingTopics(Collection<DigitalTwinIncomingTopic> topics){

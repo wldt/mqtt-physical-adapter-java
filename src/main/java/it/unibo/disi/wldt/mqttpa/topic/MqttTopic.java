@@ -20,7 +20,11 @@ public class MqttTopic{
         return topic;
     }
 
-    public MqttQosLevel getQosLevel() {
-        return qosLevel;
+    public Integer getQos() {
+        return qosLevel.getQosValue();
+    }
+
+    public void setQosLevel(MqttQosLevel qosLevel) {
+        this.qosLevel = qosLevel;
     }
 }

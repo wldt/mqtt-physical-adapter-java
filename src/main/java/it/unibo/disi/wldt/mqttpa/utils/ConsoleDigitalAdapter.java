@@ -1,6 +1,8 @@
 package it.unibo.disi.wldt.mqttpa.utils;
 
 import it.unimore.dipi.iot.wldt.adapter.digital.DigitalAdapter;
+import it.unimore.dipi.iot.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
+import it.unimore.dipi.iot.wldt.core.event.WldtEventBus;
 import it.unimore.dipi.iot.wldt.core.state.*;
 import it.unimore.dipi.iot.wldt.exception.EventBusException;
 import it.unimore.dipi.iot.wldt.exception.WldtDigitalTwinStateEventException;
@@ -127,6 +129,17 @@ public class ConsoleDigitalAdapter extends DigitalAdapter<String> {
 
     @Override
     public void onDigitalTwinDestroy() {
+
+    }
+
+    public <T> void invokeAction(String actionKey, T body){
+        try {
+            final PhysicalAssetActionWldtEvent<T> dtActionEvent = new PhysicalAssetActionWldtEvent<>(actionKey, body);
+            WldtEventBus.getInstance().publishEvent(this.getId(), dtActionEvent);
+            logger.info("DA({}) - published Action Event {}", this.getId(), dtActionEvent);
+        } catch (EventBusException e) {
+            e.printStackTrace();
+        }
 
     }
 }

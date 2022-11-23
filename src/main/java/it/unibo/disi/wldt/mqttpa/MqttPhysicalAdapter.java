@@ -1,8 +1,7 @@
 package it.unibo.disi.wldt.mqttpa;
 
 import it.unibo.disi.wldt.mqttpa.topic.DigitalTwinIncomingTopic;
-import it.unibo.disi.wldt.mqttpa.topic.EventIncomingTopic;
-import it.unibo.disi.wldt.mqttpa.topic.PropertyIncomingTopic;
+import it.unibo.disi.wldt.mqttpa.topic.DigitalTwinOutgoingTopic;
 import it.unimore.dipi.iot.wldt.adapter.physical.ConfigurablePhysicalAdapter;
 import it.unimore.dipi.iot.wldt.adapter.physical.PhysicalAssetDescription;
 import it.unimore.dipi.iot.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
@@ -15,8 +14,8 @@ import org.eclipse.paho.client.mqttv3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class MqttPhysicalAdapter extends ConfigurablePhysicalAdapter<MqttPhysicalAdapterConfiguration> {
 
@@ -32,7 +31,10 @@ public class MqttPhysicalAdapter extends ConfigurablePhysicalAdapter<MqttPhysica
 
     @Override
     public void onIncomingPhysicalAction(PhysicalAssetActionWldtEvent<?> physicalActionEvent) {
-
+        logger.info("MQTT Physical Adapter received action event: {}", physicalActionEvent);
+        getConfiguration()
+                .getOutgoingTopicByActionEventType(physicalActionEvent.getType())
+                .ifPresent(t -> publishOnTopic(t, t.applyPublishFunction(physicalActionEvent)));
     }
 
     @Override
@@ -40,7 +42,7 @@ public class MqttPhysicalAdapter extends ConfigurablePhysicalAdapter<MqttPhysica
         try {
             connectToMqttBroker();
             getConfiguration().getIncomingTopics().forEach(this::subscribeClientToDigitalTwinIncomingTopic);
-            logger.info("MQTT Physical Adapter - MQTT client suscribed to incoming topic");
+            logger.info("MQTT Physical Adapter - MQTT client subscribed to incoming topics");
             notifyPhysicalAdapterBound(new PhysicalAssetDescription(getConfiguration().getPhysicalAssetActions(),
                     getConfiguration().getPhysicalAssetProperties(),
                     getConfiguration().getPhysicalAssetEvents()));
@@ -52,6 +54,18 @@ public class MqttPhysicalAdapter extends ConfigurablePhysicalAdapter<MqttPhysica
     @Override
     public void onAdapterStop() {
 
+    }
+
+    private void publishOnTopic(DigitalTwinOutgoingTopic topic, String payload){
+        try {
+            MqttMessage msg = new MqttMessage(payload.getBytes(StandardCharsets.UTF_8));
+            msg.setQos(topic.getQos());
+            msg.setRetained(true);
+            mqttClient.publish(topic.getTopic(), new MqttMessage());
+            logger.info("Physical Adapter - MQTT client published message: {} on topic: {}", payload, topic.getTopic());
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
     }
 
     private void subscribeClientToDigitalTwinIncomingTopic(DigitalTwinIncomingTopic topic) {
