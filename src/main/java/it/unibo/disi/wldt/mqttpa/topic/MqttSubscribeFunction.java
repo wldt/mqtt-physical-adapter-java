@@ -9,5 +9,5 @@ import java.util.function.Function;
 /**
  * Represents a function that accepts a message published on topic (of type String) and when applied, produces a WldtEvent.
  * */
-public interface MqttSubscribeFunction<T> extends Function<String, List<WldtEvent<T>>> {
+public interface MqttSubscribeFunction extends Function<String, List<WldtEvent<?>>> {
 }

@@ -1,8 +1,10 @@
 package it.unibo.disi.wldt.mqttpa.topic;
 
-public class MqttTopic {
+import java.util.function.Function;
 
-    private String topic;
+public class MqttTopic{
+
+    private final String topic;
     private MqttQosLevel qosLevel = MqttQosLevel.MQTT_QOS_0;
 
     public MqttTopic(String topic) {
@@ -12,5 +14,13 @@ public class MqttTopic {
     public MqttTopic(String topic, MqttQosLevel qosLevel) {
         this.topic = topic;
         this.qosLevel = qosLevel;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public MqttQosLevel getQosLevel() {
+        return qosLevel;
     }
 }
