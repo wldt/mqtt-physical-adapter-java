@@ -1,7 +1,5 @@
 package it.unibo.disi.wldt.mqttpa.topic;
 
-import java.util.function.Function;
-
 public class MqttTopic{
 
     private final String topic;

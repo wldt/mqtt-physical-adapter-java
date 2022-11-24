@@ -1,8 +1,14 @@
 package it.unibo.disi.wldt.mqttpa;
 
-import it.unibo.disi.wldt.mqttpa.topic.DigitalTwinIncomingTopic;
-import it.unibo.disi.wldt.mqttpa.topic.DigitalTwinOutgoingTopic;
+import it.unibo.disi.wldt.mqttpa.exception.MqttPhysicalAdapterConfigurationException;
+import it.unibo.disi.wldt.mqttpa.topic.incoming.DigitalTwinIncomingTopic;
+import it.unibo.disi.wldt.mqttpa.topic.incoming.EventIncomingTopic;
+import it.unibo.disi.wldt.mqttpa.topic.incoming.PropertyIncomingTopic;
+import it.unibo.disi.wldt.mqttpa.topic.outgoing.ActionOutgoingTopic;
+import it.unibo.disi.wldt.mqttpa.topic.outgoing.DigitalTwinOutgoingTopic;
+import it.unibo.disi.wldt.mqttpa.topic.outgoing.MqttPublishFunction;
 import it.unimore.dipi.iot.wldt.adapter.physical.PhysicalAssetAction;
+import it.unimore.dipi.iot.wldt.adapter.physical.PhysicalAssetDescription;
 import it.unimore.dipi.iot.wldt.adapter.physical.PhysicalAssetEvent;
 import it.unimore.dipi.iot.wldt.adapter.physical.PhysicalAssetProperty;
 import it.unimore.dipi.iot.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
@@ -11,6 +17,7 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.util.*;
+import java.util.function.Function;
 
 public class MqttPhysicalAdapterConfiguration {
     private final String brokerAddress;
@@ -23,23 +30,30 @@ public class MqttPhysicalAdapterConfiguration {
     private MqttClientPersistence persistence = new MemoryPersistence();
     private boolean automaticReconnectFlag = true;
 
-    private final List<PhysicalAssetProperty<?>> physicalAssetProperties = new ArrayList<>();
-    private final List<PhysicalAssetEvent> physicalAssetEvents = new ArrayList<>();
-    private final List<PhysicalAssetAction> physicalAssetActions = new ArrayList<>();
+
+    private PhysicalAssetDescription physicalAssetDescription;
 
     //INCOMING TOPICS: Topics to which the PhysicalAdapter must subscribe
     private final List<DigitalTwinIncomingTopic> incomingTopics = new ArrayList<>();
     //OUTGOING TOPICS: Topics on which the PhysicalAdapter must publish
     private final Map<String, DigitalTwinOutgoingTopic> outgoingTopics = new HashMap<>();
 
-    public MqttPhysicalAdapterConfiguration(String brokerAddress, Integer brokerPort, String clientId) {
+    protected MqttPhysicalAdapterConfiguration(String brokerAddress, Integer brokerPort, String clientId) {
         this.brokerAddress = brokerAddress;
         this.brokerPort = brokerPort;
         this.clientId = clientId;
     }
 
-    public MqttPhysicalAdapterConfiguration(String brokerAddress, Integer brokerPort){
+    protected MqttPhysicalAdapterConfiguration(String brokerAddress, Integer brokerPort){
         this(brokerAddress, brokerPort, "wldt.mqtt.client."+new Random(System.currentTimeMillis()).nextInt());
+    }
+
+    public static MqttPhysicalAdapterConfigurationBuilder builder(String brokerAddress, Integer brokerPort, String clientId) throws MqttPhysicalAdapterConfigurationException {
+        return new MqttPhysicalAdapterConfigurationBuilder(brokerAddress, brokerPort, clientId);
+    }
+
+    public static MqttPhysicalAdapterConfigurationBuilder builder(String brokerAddress, Integer brokerPort) throws MqttPhysicalAdapterConfigurationException {
+        return new MqttPhysicalAdapterConfigurationBuilder(brokerAddress, brokerPort);
     }
 
     public String getBrokerAddress() {
@@ -70,6 +84,18 @@ public class MqttPhysicalAdapterConfiguration {
         return persistence;
     }
 
+    public MqttConnectOptions getConnectOptions(){
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setAutomaticReconnect(automaticReconnectFlag);
+        options.setCleanSession(cleanSessionFlag);
+        options.setConnectionTimeout(connectionTimeout);
+        if(username != null && !username.isEmpty() && password != null && !password.isEmpty()){
+            options.setUserName(username);
+            options.setPassword(password.toCharArray());
+        }
+        return options;
+    }
+
     public List<DigitalTwinIncomingTopic> getIncomingTopics() {
         return incomingTopics;
     }
@@ -82,68 +108,39 @@ public class MqttPhysicalAdapterConfiguration {
         return outgoingTopics.containsKey(type) ? Optional.of(outgoingTopics.get(type)) : Optional.empty();
     }
 
-    public List<PhysicalAssetProperty<?>> getPhysicalAssetProperties() {
-        return physicalAssetProperties;
+    public PhysicalAssetDescription getPhysicalAssetDescription() {
+        return physicalAssetDescription;
     }
 
-    public List<PhysicalAssetEvent> getPhysicalAssetEvents() {
-        return physicalAssetEvents;
-    }
-
-    public List<PhysicalAssetAction> getPhysicalAssetActions() {
-        return physicalAssetActions;
-    }
-
-    public void addIncomingTopic(DigitalTwinIncomingTopic topic){
+    protected void addIncomingTopic(DigitalTwinIncomingTopic topic){
         this.incomingTopics.add(topic);
     }
 
-    public void addOutgoingTopic(String actionKey, DigitalTwinOutgoingTopic topic){
+    protected void addOutgoingTopic(String actionKey, DigitalTwinOutgoingTopic topic){
         this.outgoingTopics.put(PhysicalAssetActionWldtEvent.buildEventType(actionKey),topic);
     }
 
-//    public void addIncomingTopics(Collection<DigitalTwinIncomingTopic> topics){
-//        this.incomingTopics.addAll(topics);
-//    }
-
-    public <T> void addPhysicalAssetProperty(String key, T initValue){
-        this.physicalAssetProperties.add(new PhysicalAssetProperty<>(key, initValue));
+    protected void setPhysicalAssetDescription(List<PhysicalAssetAction> actions,
+                                            List<PhysicalAssetProperty<?>> properties,
+                                            List<PhysicalAssetEvent> events){
+        this.physicalAssetDescription = new PhysicalAssetDescription(actions, properties, events);
     }
 
-    public void addPhysicalAssetAction(String key, String type, String contentType){
-        this.physicalAssetActions.add(new PhysicalAssetAction(key, type, contentType));
-    }
-
-    public void addPhysicalAssetEvent(String key, String type){
-        this.physicalAssetEvents.add(new PhysicalAssetEvent(key, type));
-    }
-
-    public void setMqttClientId(String clientId) {
-        this.clientId = clientId;
-    }
-
-    public void setConnectionTimeout(Integer connectionTimeout) {
+    protected void setConnectionTimeout(Integer connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
     }
 
-    public void setCleanSessionFlag(boolean cleanSession) {
+    protected void setCleanSessionFlag(boolean cleanSession) {
         this.cleanSessionFlag = cleanSession;
     }
 
-    public void setAutomaticReconnectFlag(boolean automaticReconnect){
+    protected void setAutomaticReconnectFlag(boolean automaticReconnect){
         this.automaticReconnectFlag = automaticReconnect;
     }
 
-    public void setMqttClientPersistence(MqttClientPersistence persistence) {
+    protected void setMqttClientPersistence(MqttClientPersistence persistence) {
         this.persistence = persistence;
     }
 
-    public MqttConnectOptions getConnectOptions(){
-        MqttConnectOptions options = new MqttConnectOptions();
-        options.setAutomaticReconnect(automaticReconnectFlag);
-        options.setCleanSession(cleanSessionFlag);
-        options.setConnectionTimeout(connectionTimeout);
-        return options;
-    }
 }
 

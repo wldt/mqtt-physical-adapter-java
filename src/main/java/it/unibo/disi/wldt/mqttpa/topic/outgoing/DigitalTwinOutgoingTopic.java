@@ -1,6 +1,7 @@
-package it.unibo.disi.wldt.mqttpa.topic;
+package it.unibo.disi.wldt.mqttpa.topic.outgoing;
 
 
+import it.unibo.disi.wldt.mqttpa.topic.MqttTopic;
 import it.unimore.dipi.iot.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
 
 public class DigitalTwinOutgoingTopic extends MqttTopic {
@@ -11,7 +12,11 @@ public class DigitalTwinOutgoingTopic extends MqttTopic {
         this.publishFunction = publishFunction;
     }
 
-    public String applyPublishFunction(PhysicalAssetActionWldtEvent<?> actionWldtEvent){
+    public <T> String applyPublishFunction(PhysicalAssetActionWldtEvent<T> actionWldtEvent){
         return this.publishFunction.apply(actionWldtEvent);
+    }
+
+    public MqttPublishFunction getPublishFunction() {
+        return publishFunction;
     }
 }

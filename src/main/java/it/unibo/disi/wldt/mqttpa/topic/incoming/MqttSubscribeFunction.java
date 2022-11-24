@@ -1,4 +1,4 @@
-package it.unibo.disi.wldt.mqttpa.topic;
+package it.unibo.disi.wldt.mqttpa.topic.incoming;
 
 import it.unimore.dipi.iot.wldt.core.event.WldtEvent;
 

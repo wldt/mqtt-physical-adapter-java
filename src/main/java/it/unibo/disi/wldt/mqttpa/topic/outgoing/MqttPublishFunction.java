@@ -1,4 +1,4 @@
-package it.unibo.disi.wldt.mqttpa.topic;
+package it.unibo.disi.wldt.mqttpa.topic.outgoing;
 
 import it.unimore.dipi.iot.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
 
