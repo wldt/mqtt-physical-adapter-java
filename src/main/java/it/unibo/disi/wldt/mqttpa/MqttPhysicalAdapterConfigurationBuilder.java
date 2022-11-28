@@ -63,7 +63,7 @@ public class MqttPhysicalAdapterConfigurationBuilder {
         return this;
     }
 
-    public MqttPhysicalAdapterConfigurationBuilder addOutgoingTopic(String actionKey, DigitalTwinOutgoingTopic topic) throws MqttPhysicalAdapterConfigurationException {
+    public MqttPhysicalAdapterConfigurationBuilder addOutgoingTopic(String actionKey, DigitalTwinOutgoingTopic<?> topic) throws MqttPhysicalAdapterConfigurationException {
         if(topic == null || isValid(actionKey)) throw new MqttPhysicalAdapterConfigurationException("DigitalTwinOutgoingTopic cannot be null | Action key cannot be empty string or null");
         checkTopicAndFunction(topic.getTopic(), topic.getPublishFunction(), this.configuration.getOutgoingTopics().values().stream().map(MqttTopic::getTopic).collect(Collectors.toList()));
         configuration.addOutgoingTopic(actionKey, topic);
