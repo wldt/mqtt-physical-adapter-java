@@ -4,5 +4,5 @@ import it.unimore.dipi.iot.wldt.adapter.physical.event.PhysicalAssetActionWldtEv
 
 import java.util.function.Function;
 
-public interface MqttPublishFunction<T> extends Function<PhysicalAssetActionWldtEvent<T>, String> {
+public interface MqttPublishFunction extends Function<PhysicalAssetActionWldtEvent<?>, String> {
 }
