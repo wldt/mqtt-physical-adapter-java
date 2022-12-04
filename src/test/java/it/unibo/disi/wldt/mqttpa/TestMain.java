@@ -33,7 +33,7 @@ public class TestMain {
                 .addPhysicalAssetProperty("temperature", 0)
                 .addPhysicalAssetProperty("humidity", 0)
                 .addPhysicalAssetEventAndTopic("overheating", "text/plain", "sensor/overheating", Function.identity())
-                .addPhysicalAssetActionAndTopic("switch-off", "sensor.actuation", "text/plain", "sensor/overheating", actionBody -> "switch" + actionBody)
+                .addPhysicalAssetActionAndTopic("switch-off", "sensor.actuation", "text/plain", "sensor/actions/switch", actionBody -> "switch" + actionBody)
                 .build();
 
 //                .addPhysicalAssetPropertyAndTopic("intensity", 0, "sensor/intensity", Integer::parseInt)

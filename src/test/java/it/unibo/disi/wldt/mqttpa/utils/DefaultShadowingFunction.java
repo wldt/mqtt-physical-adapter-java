@@ -1,5 +1,6 @@
 package it.unibo.disi.wldt.mqttpa.utils;
 
+import it.unimore.dipi.iot.wldt.adapter.digital.event.DigitalActionWldtEvent;
 import it.unimore.dipi.iot.wldt.adapter.physical.PhysicalAssetDescription;
 import it.unimore.dipi.iot.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
 import it.unimore.dipi.iot.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
@@ -18,7 +19,6 @@ import java.util.stream.Collectors;
 public class DefaultShadowingFunction extends ShadowingModelFunction {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultShadowingFunction.class);
-    private boolean isShadowed = false;
 
     public DefaultShadowingFunction() {
         super("default-shadowing-function");
@@ -42,7 +42,7 @@ public class DefaultShadowingFunction extends ShadowingModelFunction {
     @Override
     protected void onDigitalTwinBound(Map<String, PhysicalAssetDescription> adaptersPhysicalAssetDescriptionMap) {
         logger.debug("Shadowing - onDtBound");
-        if(!isShadowed) startShadowing(adaptersPhysicalAssetDescriptionMap);
+        startShadowing(adaptersPhysicalAssetDescriptionMap);
         try {
             this.observePhysicalAssetProperties(adaptersPhysicalAssetDescriptionMap.values()
                     .stream()
@@ -53,6 +53,7 @@ public class DefaultShadowingFunction extends ShadowingModelFunction {
                     .stream()
                     .flatMap(pad -> pad.getEvents().stream())
                     .collect(Collectors.toList()));
+            observeDigitalActionEvents();
         } catch (EventBusException | ModelException e) {
             e.printStackTrace();
         }
@@ -115,12 +116,23 @@ public class DefaultShadowingFunction extends ShadowingModelFunction {
 
     @Override
     protected void onPhysicalAssetEventNotification(PhysicalAssetEventWldtEvent<?> physicalAssetEventWldtEvent) {
-        logger.info("Shadowing - onPAEventNotification - received Event:{}", physicalAssetEventWldtEvent);
+        logger.info("Shadowing - onPhysicalAssetEventNotification - received Event:{}", physicalAssetEventWldtEvent);
         try {
             this.digitalTwinState.notifyDigitalTwinStateEvent(new DigitalTwinStateEventNotification<>(
                     physicalAssetEventWldtEvent.getPhysicalEventKey(),
-                    (String) physicalAssetEventWldtEvent.getBody()));
+                    (String) physicalAssetEventWldtEvent.getBody(),
+                    System.currentTimeMillis()));
         } catch (WldtDigitalTwinStateEventNotificationException | EventBusException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onDigitalActionEvent(DigitalActionWldtEvent<?> digitalActionWldtEvent) {
+        logger.info("Shadowing - onDigitalActionEvent - received:{}", digitalActionWldtEvent);
+        try {
+            publishPhysicalAssetActionWldtEvent(digitalActionWldtEvent.getActionKey(), digitalActionWldtEvent.getBody());
+        } catch (EventBusException e) {
             e.printStackTrace();
         }
     }

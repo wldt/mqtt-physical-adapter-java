@@ -134,12 +134,9 @@ public class ConsoleDigitalAdapter extends DigitalAdapter<String> {
 
     public <T> void invokeAction(String actionKey, T body){
         try {
-            final PhysicalAssetActionWldtEvent<T> dtActionEvent = new PhysicalAssetActionWldtEvent<>(actionKey, body);
-            WldtEventBus.getInstance().publishEvent(this.getId(), dtActionEvent);
-            logger.info("DA({}) - published Action Event {}", this.getId(), dtActionEvent);
+            publishDigitalActionWldtEvent(actionKey, body);
         } catch (EventBusException e) {
             e.printStackTrace();
         }
-
     }
 }
