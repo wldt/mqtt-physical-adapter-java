@@ -8,7 +8,6 @@ import it.unibo.disi.wldt.mqttpa.utils.ConsoleDigitalAdapter;
 import it.unibo.disi.wldt.mqttpa.utils.DefaultShadowingFunction;
 import it.unibo.disi.wldt.mqttpa.utils.MessageDescriptor;
 import it.unimore.dipi.iot.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
-import it.unimore.dipi.iot.wldt.core.engine.WldtConfiguration;
 import it.unimore.dipi.iot.wldt.core.engine.WldtEngine;
 import it.unimore.dipi.iot.wldt.core.event.WldtEvent;
 import it.unimore.dipi.iot.wldt.exception.EventBusException;
@@ -23,7 +22,7 @@ import java.util.function.Function;
 
 public class TestMain {
     public static void main(String[] args) throws WldtConfigurationException, ModelException, WldtRuntimeException, EventBusException, MqttException, InterruptedException, MqttPhysicalAdapterConfigurationException {
-        WldtEngine dt = new WldtEngine(new DefaultShadowingFunction(),buildWldtConfiguration());
+        WldtEngine dt = new WldtEngine(new DefaultShadowingFunction(), "mqtt-digital-twin");
         ConsoleDigitalAdapter dtAdapter = new ConsoleDigitalAdapter();
         dt.addDigitalAdapter(dtAdapter);
 
@@ -53,16 +52,6 @@ public class TestMain {
 
         dtAdapter.invokeAction("switch-off", "off");
 
-    }
-
-    private static WldtConfiguration buildWldtConfiguration() {
-
-        //Manual creation of the WldtConfiguration
-        WldtConfiguration wldtConfiguration = new WldtConfiguration();
-        wldtConfiguration.setDeviceNameSpace("it.unimore.dipi.things");
-        wldtConfiguration.setWldtBaseIdentifier("wldt");
-        wldtConfiguration.setWldtStartupTimeSeconds(10);
-        return wldtConfiguration;
     }
 
     private static MqttSubscribeFunction getSensorStateFunction(){
