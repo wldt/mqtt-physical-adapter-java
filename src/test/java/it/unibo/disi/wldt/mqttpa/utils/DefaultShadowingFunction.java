@@ -53,7 +53,7 @@ public class DefaultShadowingFunction extends ShadowingModelFunction {
                     .stream()
                     .flatMap(pad -> pad.getEvents().stream())
                     .collect(Collectors.toList()));
-            observeDigitalActionEvents();
+            this.observeDigitalActionEvents();
         } catch (EventBusException | ModelException e) {
             e.printStackTrace();
         }

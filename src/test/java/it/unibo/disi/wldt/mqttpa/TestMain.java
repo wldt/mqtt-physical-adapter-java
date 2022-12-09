@@ -7,6 +7,7 @@ import it.unibo.disi.wldt.mqttpa.topic.incoming.MqttSubscribeFunction;
 import it.unibo.disi.wldt.mqttpa.utils.ConsoleDigitalAdapter;
 import it.unibo.disi.wldt.mqttpa.utils.DefaultShadowingFunction;
 import it.unibo.disi.wldt.mqttpa.utils.MessageDescriptor;
+import it.unimore.dipi.iot.wldt.adapter.physical.PhysicalAssetProperty;
 import it.unimore.dipi.iot.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
 import it.unimore.dipi.iot.wldt.core.engine.WldtEngine;
 import it.unimore.dipi.iot.wldt.core.event.WldtEvent;
@@ -28,9 +29,7 @@ public class TestMain {
 
         MqttPhysicalAdapterConfiguration config = MqttPhysicalAdapterConfiguration.builder("127.0.0.1", 1883)
                 .addPhysicalAssetPropertyAndTopic("intensity", 0, "sensor/intensity", Integer::parseInt)
-                .addIncomingTopic(new DigitalTwinIncomingTopic("sensor/state", getSensorStateFunction()))
-                .addPhysicalAssetProperty("temperature", 0)
-                .addPhysicalAssetProperty("humidity", 0)
+                .addIncomingTopic(new DigitalTwinIncomingTopic("sensor/state", getSensorStateFunction()), createIncomingTopicRelatedPropertyList(), new ArrayList<>())
                 .addPhysicalAssetEventAndTopic("overheating", "text/plain", "sensor/overheating", Function.identity())
                 .addPhysicalAssetActionAndTopic("switch-off", "sensor.actuation", "text/plain", "sensor/actions/switch", actionBody -> "switch" + actionBody)
                 .build();
@@ -52,6 +51,13 @@ public class TestMain {
 
         dtAdapter.invokeAction("switch-off", "off");
 
+    }
+
+    private static List<PhysicalAssetProperty<?>> createIncomingTopicRelatedPropertyList(){
+        List<PhysicalAssetProperty<?>> properties = new ArrayList<>();
+        properties.add(new PhysicalAssetProperty<>("temperature", 0));
+        properties.add(new PhysicalAssetProperty<>("humidity", 0));
+        return properties;
     }
 
     private static MqttSubscribeFunction getSensorStateFunction(){

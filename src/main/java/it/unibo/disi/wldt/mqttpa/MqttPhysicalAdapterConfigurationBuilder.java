@@ -56,31 +56,34 @@ public class MqttPhysicalAdapterConfigurationBuilder {
 
     }
 
-    public MqttPhysicalAdapterConfigurationBuilder addIncomingTopic(DigitalTwinIncomingTopic topic) throws MqttPhysicalAdapterConfigurationException {
+    public MqttPhysicalAdapterConfigurationBuilder addIncomingTopic(DigitalTwinIncomingTopic topic, List<PhysicalAssetProperty<?>> properties, List<PhysicalAssetEvent> events) throws MqttPhysicalAdapterConfigurationException {
         if(topic == null) throw new MqttPhysicalAdapterConfigurationException("DigitalTwinIncomingTopic cannot be null");
+        if(!isValid(properties) && !isValid(events)) throw new MqttPhysicalAdapterConfigurationException("Property and event list cannot be null or empty. For each DigitalTwinIncomingTopic, related properties and events must be specified");
         checkTopicAndFunction(topic.getTopic(), topic.getSubscribeFunction(), this.configuration.getIncomingTopics().stream().map(MqttTopic::getTopic).collect(Collectors.toList()));
+        this.properties.addAll(properties);
+        this.events.addAll(events);
         configuration.addIncomingTopic(topic);
         return this;
     }
 
-    public MqttPhysicalAdapterConfigurationBuilder addOutgoingTopic(String actionKey, DigitalTwinOutgoingTopic topic) throws MqttPhysicalAdapterConfigurationException {
+    public MqttPhysicalAdapterConfigurationBuilder addOutgoingTopic(String actionKey,  String type, String contentType, DigitalTwinOutgoingTopic topic) throws MqttPhysicalAdapterConfigurationException {
         if(topic == null || isValid(actionKey)) throw new MqttPhysicalAdapterConfigurationException("DigitalTwinOutgoingTopic cannot be null | Action key cannot be empty string or null");
         checkTopicAndFunction(topic.getTopic(), topic.getPublishFunction(), this.configuration.getOutgoingTopics().values().stream().map(MqttTopic::getTopic).collect(Collectors.toList()));
         configuration.addOutgoingTopic(actionKey, topic);
-        return this;
+        return addPhysicalAssetAction(actionKey, type, contentType);
     }
 
-    public <T> MqttPhysicalAdapterConfigurationBuilder addPhysicalAssetProperty(String key, T initValue){
+    private <T> MqttPhysicalAdapterConfigurationBuilder addPhysicalAssetProperty(String key, T initValue){
         this.properties.add(new PhysicalAssetProperty<>(key, initValue));
         return this;
     }
 
-    public MqttPhysicalAdapterConfigurationBuilder addPhysicalAssetAction(String key, String type, String contentType){
+    private MqttPhysicalAdapterConfigurationBuilder addPhysicalAssetAction(String key, String type, String contentType){
         this.actions.add(new PhysicalAssetAction(key, type, contentType));
         return this;
     }
 
-    public MqttPhysicalAdapterConfigurationBuilder addPhysicalAssetEvent(String key, String type){
+    private MqttPhysicalAdapterConfigurationBuilder addPhysicalAssetEvent(String key, String type){
        this.events.add(new PhysicalAssetEvent(key, type));
         return this;
     }
@@ -121,6 +124,10 @@ public class MqttPhysicalAdapterConfigurationBuilder {
             throw new MqttPhysicalAdapterConfigurationException("topic cannot be empty or null | topic function cannot be null");
         if(topicList.contains(topic))
             throw new MqttPhysicalAdapterConfigurationException("topic already defined");
+    }
+
+    private <T> boolean isValid(List<T> list){
+        return list != null && !list.isEmpty();
     }
 
     private boolean isValid(String param){
