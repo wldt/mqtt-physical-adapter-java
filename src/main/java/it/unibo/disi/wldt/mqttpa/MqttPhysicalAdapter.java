@@ -31,7 +31,7 @@ public class MqttPhysicalAdapter extends ConfigurablePhysicalAdapter<MqttPhysica
     public void onIncomingPhysicalAction(PhysicalAssetActionWldtEvent<?> physicalActionEvent) {
         logger.info("MQTT Physical Adapter received action event: {}", physicalActionEvent);
         getConfiguration()
-                .getOutgoingTopicByActionEventType(physicalActionEvent.getType())
+                .getOutgoingTopicByActionKey(physicalActionEvent.getActionKey())
                 .ifPresent(t -> publishOnTopic(t, t.applyPublishFunction(physicalActionEvent)));
     }
 

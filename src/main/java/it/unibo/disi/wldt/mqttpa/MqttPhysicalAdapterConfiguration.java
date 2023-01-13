@@ -104,8 +104,8 @@ public class MqttPhysicalAdapterConfiguration {
         return outgoingTopics;
     }
 
-    public Optional<DigitalTwinOutgoingTopic> getOutgoingTopicByActionEventType(String type){
-        return outgoingTopics.containsKey(type) ? Optional.of(outgoingTopics.get(type)) : Optional.empty();
+    public Optional<DigitalTwinOutgoingTopic> getOutgoingTopicByActionKey(String key){
+        return outgoingTopics.containsKey(key) ? Optional.of(outgoingTopics.get(key)) : Optional.empty();
     }
 
     public PhysicalAssetDescription getPhysicalAssetDescription() {
@@ -117,7 +117,7 @@ public class MqttPhysicalAdapterConfiguration {
     }
 
     protected void addOutgoingTopic(String actionKey, DigitalTwinOutgoingTopic topic){
-        this.outgoingTopics.put(PhysicalAssetActionWldtEvent.buildEventType(actionKey),topic);
+        this.outgoingTopics.put(actionKey,topic);
     }
 
     protected void setPhysicalAssetDescription(List<PhysicalAssetAction> actions,
