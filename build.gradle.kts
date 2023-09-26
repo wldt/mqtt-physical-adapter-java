@@ -72,7 +72,7 @@ publishing {
             licenses {
                 license {
                     name = "Apache-2.0 license"
-                    url = "https://raw.githubusercontent.com/wldt/wldt-core-java/master/LICENSE"
+                    url = "https://raw.githubusercontent.com/wldt/mqtt-physical-adapter-java/main/LICENSE"
                 }
             }
 
@@ -90,8 +90,8 @@ publishing {
             }
 
             scm {
-                connection = "scm:git:https://github.com/wldt/wldt-core-java.git"
-                url = "https://github.com/wldt/wldt-core-java"
+                connection = "scm:git:https://github.com/wldt/mqtt-physical-adapter-java"
+                url = "https://github.com/wldt/mqtt-physical-adapter-java"
             }
         }
     }
