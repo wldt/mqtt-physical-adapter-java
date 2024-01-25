@@ -50,7 +50,7 @@ public class DefaultShadowingFunction extends ShadowingFunction {
 
             startShadowing(adaptersPhysicalAssetDescriptionMap);
 
-            // Observe all available events
+            // Observe all available properties
             this.observePhysicalAssetProperties(adaptersPhysicalAssetDescriptionMap.values()
                     .stream()
                     .flatMap(pad -> pad.getProperties().stream())
