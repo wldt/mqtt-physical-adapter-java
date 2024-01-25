@@ -10,14 +10,15 @@ plugins {
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
     api("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
     api("com.github.spullara.mustache.java:compiler:0.9.10")
-    api("ch.qos.logback:logback-classic:1.2.9")
+    api("ch.qos.logback:logback-classic:1.4.12")
     api("com.google.code.gson:gson:2.10")
-    api("io.github.wldt:wldt-core:0.2.1")
+    api("io.github.wldt:wldt-core:0.3.0-alpha-24012024")
     testImplementation("junit:junit:4.13.2")
 }
 
