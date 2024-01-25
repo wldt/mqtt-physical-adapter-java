@@ -39,7 +39,7 @@ tasks.withType<Javadoc>() {
 }
 
 group = "io.github.wldt"
-version = "0.1.0"
+version = "0.1.1"
 description = "Physical adapter to connect with the MQTT protocol"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
