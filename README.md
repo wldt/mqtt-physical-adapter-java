@@ -11,6 +11,13 @@ Key Features:
 - **Incoming and Outgoing Topic Handling:** MqttPhysicalAdapter facilitates the handling of incoming and outgoing topics, crucial for communication between the physical assets and the MQTT broker. The library includes dedicated classes for defining and managing topics, allowing users to efficiently subscribe to incoming data and publish outgoing messages.
 - **Adapter for Physical Asset Integration:** At the core of the library is a robust adapter designed specifically for integrating with various physical assets. This adapter streamlines the process of connecting and interacting with physical devices, ensuring a smooth and standardized approach to managing asset-related data.
 
+In the WLDT library, Physical Adapters has the responsibility to generate and publish the ``PhysicalAssetDescription`` (PAD) 
+to describe the capabilities and the characteristics of our object allowing
+the Shadowing Function to decide how to digitalize its physical counterpart.
+
+**In the `MqttPhysicalAdapter` the generation of the PAD is automatically and internally executed by the adapter itself accordingly to 
+the adapter configuration in terms of MQTT topics and their mapping with DT's properties, events and actions.**
+
 Prerequisites:
 
 - **External MQTT Broker:** The MqttPhysicalAdapter library requires an external MQTT broker for optimal functionality. 
@@ -64,17 +71,99 @@ MqttPhysicalAdapterConfiguration.builder();
 
 On the builder the available methods that can be used are:
 
-- `addPhysicalAssetPropertyAndTopic(String propertyKey, T initialValue, String topic, Function<String, T> topicFunction)`: Adds a physical asset property and its corresponding MQTT topic to the configuration.
-Returns the builder for method chaining. Throws MqttPhysicalAdapterConfigurationException if the topic or function is invalid.
-- `addPhysicalAssetActionAndTopic(String actionKey, String type, String contentType, String topic, Function<T, String> topicFunction)`: Adds a physical asset action and its corresponding MQTT topic to the configuration.
-Returns the builder for method chaining. Throws MqttPhysicalAdapterConfigurationException if the topic or function is invalid.
-- `addPhysicalAssetEventAndTopic(String eventKey, String type, String topic, Function<String, T> topicFunction)`: Adds a physical asset event and its corresponding MQTT topic to the configuration.
-Returns the builder for method chaining.  Throws MqttPhysicalAdapterConfigurationException if the topic or function is invalid.
-- `addIncomingTopic(DigitalTwinIncomingTopic topic, List<PhysicalAssetProperty<?>> properties, List<PhysicalAssetEvent> events)`: Adds a custom incoming topic 
-along with related properties and events to the configuration.  Returns the builder for method chaining.
-Throws MqttPhysicalAdapterConfigurationException if the topic or related lists are invalid.
-- `addOutgoingTopic(String actionKey, String type, String contentType, DigitalTwinOutgoingTopic topic)`: Adds a custom outgoing topic to the configuration.
-Returns the builder for method chaining. Throws MqttPhysicalAdapterConfigurationException if the topic or action key is invalid.
+### addPhysicalAssetPropertyAndTopic
+
+```java
+public <T> MqttPhysicalAdapterConfigurationBuilder addPhysicalAssetPropertyAndTopic(String propertyKey, T initialValue, String topic, Function<String, T> topicFunction) throws MqttPhysicalAdapterConfigurationException 
+```
+
+Adds a physical asset property and its corresponding MQTT topic to the configuration.
+
+- **Type Parameter T:** The type of the property.
+- **propertyKey:** The key of the property.
+- **initialValue:** The initial value of the property.
+- **topic:** The MQTT topic associated with the property.
+- **topicFunction:** A function to parse the MQTT topic payload into the property type.
+
+**Returns:** The updated MqttPhysicalAdapterConfigurationBuilder.
+
+**Throws:** `MqttPhysicalAdapterConfigurationException` - If there is a configuration error.
+
+### addPhysicalAssetActionAndTopic
+
+```java
+public <T> MqttPhysicalAdapterConfigurationBuilder addPhysicalAssetActionAndTopic(String actionKey, String type, String contentType,
+                                                   String topic, Function<T, String> topicFunction) throws MqttPhysicalAdapterConfigurationException
+```
+
+Adds a physical asset action and its corresponding MQTT topic to the configuration.
+
+- **Type Parameter T:** The type of the action payload.
+- **actionKey:** The key of the action.
+- **type:** The type of the action.
+- **contentType:** The content type of the action.
+- **topic:** The MQTT topic associated with the action.
+- **topicFunction:** A function to convert the action payload into the MQTT topic payload.
+
+**Returns:** The updated MqttPhysicalAdapterConfigurationBuilder.
+
+**Throws:** `MqttPhysicalAdapterConfigurationException` - If there is a configuration error.
+
+### addPhysicalAssetEventAndTopic
+
+```java
+public <T> MqttPhysicalAdapterConfigurationBuilder addPhysicalAssetEventAndTopic(String eventKey, String type, String topic, Function<String, T> topicFunction) throws MqttPhysicalAdapterConfigurationException
+```
+
+Adds a physical asset event and its corresponding MQTT topic to the configuration.
+
+- **Type Parameter T:** The type of the event payload.
+- **eventKey:** The key of the event.
+- **type:** The type of the event.
+- **topic:** The MQTT topic associated with the event.
+- **topicFunction:** A function to parse the MQTT topic payload into the event payload type.
+
+**Returns:** The updated MqttPhysicalAdapterConfigurationBuilder.
+
+**Throws:** `MqttPhysicalAdapterConfigurationException` - If there is a configuration error.
+
+### addIncomingTopic
+
+```java
+public MqttPhysicalAdapterConfigurationBuilder addIncomingTopic(DigitalTwinIncomingTopic topic, List<PhysicalAssetProperty<?>> properties, List<PhysicalAssetEvent> events) throws MqttPhysicalAdapterConfigurationException
+```
+
+This method is used when multiple properties or events can be associated to a single MQTT topic on the physical device. 
+It adds a `DigitalTwinIncomingTopic` describing the topic where the DT will receive the data 
+along with its related lists of properties and events associated to that topic.
+
+- **topic:** The DigitalTwinIncomingTopic to be added.
+- **properties:** The list of related physical asset properties.
+- **events:** The list of related physical asset events.
+
+**Returns:** The updated MqttPhysicalAdapterConfigurationBuilder.
+
+**Throws:** `MqttPhysicalAdapterConfigurationException` - If there is a configuration error.
+
+### addOutgoingTopic
+
+```java
+public MqttPhysicalAdapterConfigurationBuilder addOutgoingTopic(String actionKey,  String type, String contentType, DigitalTwinOutgoingTopic topic) throws MqttPhysicalAdapterConfigurationException
+```
+
+Adds a DigitalTwinOutgoingTopic to the configuration.
+
+- **actionKey:** The key of the associated action.
+- **type:** The type of the associated action.
+- **contentType:** The content type of the associated action.
+- **topic:** The DigitalTwinOutgoingTopic to be added.
+
+**Returns:** The updated MqttPhysicalAdapterConfigurationBuilder.
+
+**Throws:** `MqttPhysicalAdapterConfigurationException` - If there is a configuration error.
+
+### Additional Methods
+
 - `setConnectionTimeout(Integer connectionTimeout)`: Sets the connection timeout for the MQTT client.
 Returns the builder for method chaining.  Throws MqttPhysicalAdapterConfigurationException if the provided timeout is invalid.
 - `setCleanSessionFlag(boolean cleanSession)`: Sets the clean session flag for the MQTT client.
@@ -134,3 +223,17 @@ digitalTwinEngine.addDigitalTwin(digitalTwin);
 // Start all the Digital Twins registered on the engine
 digitalTwinEngine.startAll();
 ```
+
+In this example the `createIncomingTopicRelatedPropertyList()` used to map properties and events associated to a single topic is the following:
+
+```java
+ private static List<PhysicalAssetProperty<?>> createIncomingTopicRelatedPropertyList(){
+        List<PhysicalAssetProperty<?>> properties = new ArrayList<>();
+        properties.add(new PhysicalAssetProperty<>("temperature", 0));
+        properties.add(new PhysicalAssetProperty<>("humidity", 0));
+        return properties;
+    }
+```
+
+This information are used by the adapter to build the PAD describe the capabilities and the characteristics of our object allowing
+the Shadowing Function to decide how to digitalize its physical counterpart.
