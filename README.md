@@ -15,8 +15,12 @@ In the WLDT library, Physical Adapters has the responsibility to generate and pu
 to describe the capabilities and the characteristics of our object allowing
 the Shadowing Function to decide how to digitalize its physical counterpart.
 
-**In the `MqttPhysicalAdapter` the generation of the PAD is automatically and internally executed by the adapter itself accordingly to 
+**In the `MqttPhysicalAdapter` the generation of the PAD (Physical Asset Description) is automatically and internally executed by the adapter itself accordingly to 
 the adapter configuration in terms of MQTT topics and their mapping with DT's properties, events and actions.**
+
+<div align="center">
+  <img class="center" src="images/adapter_schema.jpg" width="100%">
+</div>
 
 Prerequisites:
 
