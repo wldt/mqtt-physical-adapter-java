@@ -24,7 +24,9 @@ public class JsonProducer {
     private static String BROKER_URI = "tcp://127.0.0.1:1883";
 
     //Message Limit generated and sent by the producer
-    private static final int MESSAGE_COUNT = 10;
+    private static final int MESSAGE_COUNT = 100;
+
+    private static final long SLEEP_TIME_MS = 5000;
 
     //Topic used to publish generated demo data
     private static final String TOPIC = "sensor/state";
@@ -43,7 +45,7 @@ public class JsonProducer {
             //When the application stops all the temporary data will be deleted.
             MqttClientPersistence persistence = new MemoryPersistence();
 
-            //The the persistence is not passed to the constructor the default file persistence is used.
+            //The persistence is not passed to the constructor the default file persistence is used.
             //In case of a file-based storage the same MQTT client UUID should be used
             IMqttClient client = new MqttClient(BROKER_URI,mqttClientId, persistence);
 
@@ -75,7 +77,7 @@ public class JsonProducer {
             	else
             		logger.error("Skipping message send due to NULL Payload !");
 
-            	Thread.sleep(1000);
+            	Thread.sleep(SLEEP_TIME_MS);
             }
 
             //Disconnect from the broker and close connection
