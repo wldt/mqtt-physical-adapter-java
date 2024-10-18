@@ -1,6 +1,7 @@
 package it.wldt.adapter.mqtt.physical;
 
 import it.wldt.adapter.mqtt.physical.exception.MqttPhysicalAdapterConfigurationException;
+import it.wldt.adapter.mqtt.physical.topic.MqttQosLevel;
 import it.wldt.adapter.mqtt.physical.topic.MqttTopic;
 import it.wldt.adapter.mqtt.physical.topic.incoming.DigitalTwinIncomingTopic;
 import it.wldt.adapter.mqtt.physical.topic.incoming.EventIncomingTopic;
@@ -96,6 +97,32 @@ public class MqttPhysicalAdapterConfigurationBuilder {
                                                    String topic, Function<T, String> topicFunction) throws MqttPhysicalAdapterConfigurationException {
         checkTopicAndFunction(topic, topicFunction, this.configuration.getOutgoingTopics().values().stream().map(MqttTopic::getTopic).collect(Collectors.toList()));
         configuration.addOutgoingTopic(actionKey, new ActionOutgoingTopic<>(topic, topicFunction));
+        return addPhysicalAssetAction(actionKey, type, contentType);
+    }
+
+    /**
+     * Adds a physical asset action and its corresponding MQTT topic to the configuration.
+     *
+     * @param <T>            The type of the action payload.
+     * @param actionKey      The key of the action.
+     * @param type           The type of the action.
+     * @param contentType    The content type of the action.
+     * @param topic          The MQTT topic associated with the action.
+     * @param qosLevel       The Quality of Service (QoS) level for message delivery.
+     * @param isRetained     The retained flag.
+     * @param topicFunction  A function to convert the action payload into the MQTT topic payload.
+     * @return The updated MqttPhysicalAdapterConfigurationBuilder.
+     * @throws MqttPhysicalAdapterConfigurationException If there is a configuration error.
+     */
+    public <T> MqttPhysicalAdapterConfigurationBuilder addPhysicalAssetActionAndTopic(String actionKey,
+                                                                                      String type,
+                                                                                      String contentType,
+                                                                                      String topic,
+                                                                                      MqttQosLevel qosLevel,
+                                                                                      boolean isRetained,
+                                                                                      Function<T, String> topicFunction) throws MqttPhysicalAdapterConfigurationException {
+        checkTopicAndFunction(topic, topicFunction, this.configuration.getOutgoingTopics().values().stream().map(MqttTopic::getTopic).collect(Collectors.toList()));
+        configuration.addOutgoingTopic(actionKey, new ActionOutgoingTopic<>(topic, qosLevel, isRetained, topicFunction));
         return addPhysicalAssetAction(actionKey, type, contentType);
     }
 

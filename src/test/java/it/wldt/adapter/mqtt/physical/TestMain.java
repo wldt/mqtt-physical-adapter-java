@@ -1,6 +1,7 @@
 package it.wldt.adapter.mqtt.physical;
 
 import com.google.gson.Gson;
+import it.wldt.adapter.mqtt.physical.topic.MqttQosLevel;
 import it.wldt.adapter.mqtt.physical.topic.incoming.DigitalTwinIncomingTopic;
 import it.wldt.adapter.mqtt.physical.topic.incoming.MqttSubscribeFunction;
 import it.wldt.adapter.mqtt.physical.utils.ConsoleDigitalAdapter;
@@ -33,6 +34,17 @@ public class TestMain {
                     .addPhysicalAssetEventAndTopic("overheating", "text/plain", "sensor/overheating", Function.identity())
                     .addPhysicalAssetActionAndTopic("switch-off", "sensor.actuation", "text/plain", "sensor/actions/switch", actionBody -> "switch" + actionBody)
                     .build();
+
+
+            /* Example with QoS and Retained Parameters
+            .addPhysicalAssetActionAndTopic("switch-off",
+                    "sensor.actuation",
+                    "text/plain",
+                    "sensor/actions/switch",
+                    MqttQosLevel.MQTT_QOS_2,
+                    true,
+                    actionBody -> "switch" + actionBody)
+            */
 
             //                .addPhysicalAssetPropertyAndTopic("intensity", 0, "sensor/intensity", Integer::parseInt)
             //                .addIncomingTopic(new DigitalTwinIncomingTopic("sensor/state", getSensorStateFunction()))

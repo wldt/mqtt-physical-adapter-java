@@ -39,7 +39,7 @@ tasks.withType<Javadoc>() {
 }
 
 group = "io.github.wldt"
-version = "0.1.1"
+version = "0.1.2"
 description = "Physical adapter to connect with the MQTT protocol"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
@@ -52,8 +52,8 @@ publishing {
             val snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots"
             url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
             credentials {
-                username = (properties["ossrhUsername"] as String?)
-                password = (properties["ossrhPassword"] as String?)
+                username = (properties["ossrhToken"] as String?)
+                password = (properties["ossrhTokenPassword"] as String?)
             }
         }
         maven {

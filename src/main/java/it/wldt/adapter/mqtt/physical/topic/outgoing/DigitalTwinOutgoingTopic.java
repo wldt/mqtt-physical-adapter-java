@@ -1,5 +1,6 @@
 package it.wldt.adapter.mqtt.physical.topic.outgoing;
 
+import it.wldt.adapter.mqtt.physical.topic.MqttQosLevel;
 import it.wldt.adapter.mqtt.physical.topic.MqttTopic;
 import it.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
 
@@ -25,6 +26,19 @@ public class DigitalTwinOutgoingTopic extends MqttTopic {
      */
     public DigitalTwinOutgoingTopic(String topic, MqttPublishFunction publishFunction) {
         super(topic);
+        this.publishFunction = publishFunction;
+    }
+
+    /**
+     * Constructs a DigitalTwinOutgoingTopic with the specified MQTT topic and a publish function.
+     *
+     * @param topic           The MQTT topic associated with outgoing messages.
+     * @param mqttQosLevel    The Quality of Service (QoS) level associated with the topic.
+     * @param isRetained      The retained flag.
+     * @param publishFunction The function to generate the MQTT message payload from the outgoing event.
+     */
+    public DigitalTwinOutgoingTopic(String topic, MqttQosLevel mqttQosLevel, boolean isRetained, MqttPublishFunction publishFunction) {
+        super(topic, mqttQosLevel, isRetained);
         this.publishFunction = publishFunction;
     }
 
