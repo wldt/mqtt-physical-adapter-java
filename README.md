@@ -51,14 +51,14 @@ To use MqttPhysicalAdapter in your Java project, you can include it as a depende
 <dependency>
     <groupId>io.github.wldt</groupId>
     <artifactId>mqtt-physical-adapter</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
 </dependency>
 ```
 
 ### Gradle 
 
 ```groovy
-implementation 'io.github.wldt:mqtt-physical-adapter:0.1.1'
+implementation 'io.github.wldt:mqtt-physical-adapter:0.1.2'
 ```
 
 ## Class Structure & Functionalities
