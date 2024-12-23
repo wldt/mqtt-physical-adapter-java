@@ -1,0 +1,147 @@
+{
+  "broker": "127.0.0.1",
+  "port": 1883,
+  "username": "",
+  "password": "",
+  "access_token": "",
+  "client_id": "",
+  "base_topic": "sensor/",
+  "topic_list": [
+    {
+      "topic": "integer",
+      "type": "property",
+      "initial_value": 0,
+      "property_key": "integer_property",
+      "function_type": "number"
+    },
+    {
+      "topic": "double",
+      "type": "property",
+      "initial_value": 0.0,
+      "property_key": "double_property",
+      "function_type": "number"
+    },
+    {
+      "topic": "boolean",
+      "type": "property",
+      "initial_value": false,
+      "property_key": "boolean_property",
+      "function_type": "boolean"
+    },
+    {
+      "topic": "string",
+      "type": "property",
+      "initial_value": "",
+      "property_key": "string_property",
+      "function_type": "string"
+    },
+    {
+      "topic": "bytes",
+      "type": "property",
+      "initial_value": [],
+      "property_key": "bytes_property",
+      "function_type": "bytes"
+    },
+    {
+      "topic": "json",
+      "type": "property",
+      "initial_value": "",
+      "property_key": "json_property",
+      "function_type": "json"
+    },
+    {
+      "topic": "event/integer",
+      "type": "event",
+      "initial_value": 0,
+      "event_type": "sensor.actuation",
+      "event_key": "event-integer",
+      "function_type": "number"
+    },
+    {
+      "topic": "event/double",
+      "type": "event",
+      "initial_value": 0.0,
+      "event_type": "sensor.actuation",
+      "event_key": "event-double",
+      "function_type": "number"
+    },
+    {
+      "topic": "event/boolean",
+      "type": "event",
+      "event_type": "sensor.actuation",
+      "event_key": "event-boolean",
+      "function_type": "boolean"
+    },
+    {
+      "topic": "event/string",
+      "type": "event",
+      "event_type": "sensor.actuation",
+      "event_key": "event-string",
+      "function_type": "string"
+    },
+    {
+      "topic": "event/json",
+      "type": "event",
+      "event_type": "sensor.actuation",
+      "event_key": "event-json",
+      "function_type": "json"
+    },
+    {
+      "topic": "event/bytes",
+      "type": "event",
+      "event_type": "sensor.actuation",
+      "event_key": "event-bytes",
+      "function_type": "bytes"
+    },
+    {
+      "topic": "action/integer",
+      "type": "action",
+      "initial_value": 0,
+      "action_type": "sensor.actuation",
+      "content_type": "text/plain",
+      "action_key": "action-integer",
+      "function_type": "number"
+    },
+    {
+      "topic": "action/double",
+      "type": "action",
+      "initial_value": 0.0,
+      "action_type": "sensor.actuation",
+      "content_type": "text/plain",
+      "action_key": "action-double",
+      "function_type": "number"
+    },
+    {
+      "topic": "action/boolean",
+      "type": "action",
+      "action_type": "sensor.actuation",
+      "content_type": "text/plain",
+      "action_key": "action-boolean",
+      "function_type": "boolean"
+    },
+    {
+      "topic": "action/string",
+      "type": "action",
+      "action_type": "sensor.actuation",
+      "content_type": "text/plain",
+      "action_key": "action-string",
+      "function_type": "string"
+    },
+    {
+      "topic": "action/json",
+      "type": "action",
+      "action_type": "sensor.actuation",
+      "content_type": "json",
+      "action_key": "action-json",
+      "function_type": "json"
+    },
+    {
+      "topic": "action/bytes",
+      "type": "action",
+      "action_type": "sensor.actuation",
+      "content_type": "text/plain",
+      "action_key": "action-bytes",
+      "function_type": "bytes"
+    }
+  ]
+}

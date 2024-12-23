@@ -144,7 +144,7 @@ public class DefaultShadowingFunction extends ShadowingFunction {
         try {
             this.digitalTwinStateManager.notifyDigitalTwinStateEvent(new DigitalTwinStateEventNotification<>(
                     physicalAssetEventWldtEvent.getPhysicalEventKey(),
-                    (String) physicalAssetEventWldtEvent.getBody(),
+                    physicalAssetEventWldtEvent.getBody(),
                     System.currentTimeMillis()));
         } catch (WldtDigitalTwinStateEventNotificationException e) {
             e.printStackTrace();

@@ -6,6 +6,8 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -28,8 +30,27 @@ public class JsonProducer {
 
     private static final long SLEEP_TIME_MS = 5000;
 
-    //Topic used to publish generated demo data
-    private static final String TOPIC = "sensor/state";
+    //Topic used to publish generated demo data to properties
+    private static final String JSON_TOPIC_PROPERTY = "sensor/json";
+    private static final String DOUBLE_TOPIC_PROPERTY = "sensor/double";
+    private static final String INTEGER_TOPIC_PROPERTY = "sensor/integer";
+    private static final String STRING_TOPIC_PROPERTY = "sensor/string";
+    private static final String BOOLEAN_TOPIC_PROPERTY = "sensor/boolean";
+    private static final String BYTE_TOPIC_PROPERTY = "sensor/bytes";
+
+    //Topic used to publish generated demo data to events
+    private static final String JSON_TOPIC_EVENT = "sensor/event/json";
+    private static final String DOUBLE_TOPIC_EVENT = "sensor/event/double";
+    private static final String INTEGER_TOPIC_EVENT = "sensor/event/integer";
+    private static final String STRING_TOPIC_EVENT = "sensor/event/string";
+    private static final String BOOLEAN_TOPIC_EVENT = "sensor/event/boolean";
+    private static final String BYTE_TOPIC_EVENT = "sensor/event/bytes";
+
+    // Set this to true if you want to test events instead of properties
+    private static final Boolean PUBLISH_ON_EVENTS = true;
+
+
+
 
     public static void main(String[] args) {
 
@@ -63,6 +84,12 @@ public class JsonProducer {
             //Create an instance of an Engine Temperature Sensor
             EngineSensor engineTemperatureSensor = new EngineSensor();
 
+            Random random = new Random();
+            String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            int length = 10;
+            StringBuilder randomString = new StringBuilder();
+            byte[] randomBytes = new byte[10];
+
             //Start to publish MESSAGE_COUNT messages
             for(int i = 0; i < MESSAGE_COUNT; i++) {
 
@@ -71,9 +98,30 @@ public class JsonProducer {
             	double sensorValue = engineTemperatureSensor.getTemperatureValue();
             	String payloadString = buildJsonMessage(sensorValue, engineTemperatureSensor.getHumidityValue());
 
+                for (int j = 0; j < length; j++) {
+                    int index = random.nextInt(chars.length());
+                    randomString.append(chars.charAt(index));
+                }
+                random.nextBytes(randomBytes);
+
             	//Internal Method to publish MQTT data using the created MQTT Client
-            	if(payloadString != null)
-            		publishData(client, TOPIC, payloadString);
+            	if(payloadString != null) {
+                    if(PUBLISH_ON_EVENTS) {
+                        publishData(client, JSON_TOPIC_EVENT, payloadString);
+                        publishData(client, INTEGER_TOPIC_EVENT, String.valueOf(random.nextInt(100)));
+                        publishData(client, DOUBLE_TOPIC_EVENT, String.valueOf(random.nextDouble(100.0)));
+                        publishData(client, BOOLEAN_TOPIC_EVENT, String.valueOf(random.nextBoolean()));
+                        publishData(client, STRING_TOPIC_EVENT, randomString.toString());
+                        publishData(client, BYTE_TOPIC_EVENT, Arrays.toString(randomBytes));
+                    } else {
+                        publishData(client, JSON_TOPIC_PROPERTY, payloadString);
+                        publishData(client, INTEGER_TOPIC_PROPERTY, String.valueOf(random.nextInt(100)));
+                        publishData(client, DOUBLE_TOPIC_PROPERTY, String.valueOf(random.nextDouble(100.0)));
+                        publishData(client, BOOLEAN_TOPIC_PROPERTY, String.valueOf(random.nextBoolean()));
+                        publishData(client, STRING_TOPIC_PROPERTY, randomString.toString());
+                        publishData(client, BYTE_TOPIC_PROPERTY, Arrays.toString(randomBytes));
+                    }
+                }
             	else
             		logger.error("Skipping message send due to NULL Payload !");
 

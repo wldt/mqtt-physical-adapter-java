@@ -1,6 +1,10 @@
 package it.wldt.adapter.mqtt.physical;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import it.wldt.adapter.mqtt.physical.exception.MqttPhysicalAdapterConfigurationException;
+import it.wldt.adapter.mqtt.physical.model.MqttPhysicalAdapterFileConfiguration;
 import it.wldt.adapter.mqtt.physical.topic.MqttQosLevel;
 import it.wldt.adapter.mqtt.physical.topic.MqttTopic;
 import it.wldt.adapter.mqtt.physical.topic.incoming.DigitalTwinIncomingTopic;
@@ -13,8 +17,9 @@ import it.wldt.adapter.physical.PhysicalAssetEvent;
 import it.wldt.adapter.physical.PhysicalAssetProperty;
 import org.eclipse.paho.client.mqttv3.MqttClientPersistence;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.lang.reflect.Method;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -36,6 +41,31 @@ public class MqttPhysicalAdapterConfigurationBuilder {
 
     /** List of target actions to be mapped into the configuration **/
     private final List<PhysicalAssetAction> actions = new ArrayList<>();
+
+    /** Static keys of File configuration map **/
+    private static final String WLDT_TYPE_MAP = "type";
+    private static final String FUNCTION_TYPE_MAP = "function_type";
+    private static final String PROPERTY_MAP = "property";
+    private static final String PROPERTY_KEY_MAP = "property_key";
+    private static final String PROPERTY_INITIAL_VALUE_MAP = "initial_value";
+    private static final String PROPERTY_TOPIC_MAP = "topic";
+    private static final String EVENT_MAP = "event";
+    private static final String EVENT_KEY_MAP = "event_key";
+    private static final String EVENT_TYPE_MAP = "event_type";
+    private static final String EVENT_INITIAL_VALUE_MAP = "initial_value";
+    private static final String EVENT_TOPIC_MAP = "topic";
+    private static final String ACTION_MAP = "action";
+    private static final String ACTION_KEY_MAP = "action_key";
+    private static final String ACTION_TYPE_MAP = "action_type";
+    private static final String ACTION_CONTENT_TYPE_MAP = "content_type";
+    private static final String ACTION_INITIAL_VALUE_MAP = "initial_value";
+    private static final String ACTION_TOPIC_MAP = "topic";
+    private static final String NUMERIC_TYPE_MAP = "number";
+    private static final String STRING_TYPE_MAP = "string";
+    private static final String BOOLEAN_TYPE_MAP = "boolean";
+    private static final String BYTES_TYPE_MAP = "bytes";
+    private static final String JSON_TYPE_MAP = "json";
+
 
     /**
      * Constructs a builder with the required parameters for creating MqttPhysicalAdapterConfiguration.
@@ -62,6 +92,183 @@ public class MqttPhysicalAdapterConfigurationBuilder {
         if(!isValid(brokerAddress) || !isValid(brokerPort))
             throw new MqttPhysicalAdapterConfigurationException("Broker Address cannot be empty strings or null and Broker Port must be a positive number");
         configuration = new MqttPhysicalAdapterConfiguration(brokerAddress, brokerPort);
+    }
+
+    /**
+     * Constructs a builder with the required parameters for creating MqttPhysicalAdapterConfiguration.
+     *
+     * @param brokerAddress The address of the MQTT broker.
+     * @param brokerPort    The port of the MQTT broker.
+     * @param clientId      The client ID for connecting to the MQTT broker.
+     * @param username      The username used for connecting to the MQTT broker
+     * @param password      The password used for connecting to the MQTT broker
+     * @throws MqttPhysicalAdapterConfigurationException If the provided parameters are invalid.
+     */
+    public MqttPhysicalAdapterConfigurationBuilder(String brokerAddress, int brokerPort, String clientId, String username, String password) throws MqttPhysicalAdapterConfigurationException {
+        if(!isValid(brokerAddress) || !isValid(brokerPort) || !isValid(clientId) || !isValid(username) || !isValid(password))
+            throw new MqttPhysicalAdapterConfigurationException("Broker Address, Client Id, Username or Password cannot be empty strings or null and Broker Port must be a positive number");
+        configuration = new MqttPhysicalAdapterConfiguration(brokerAddress, brokerPort, clientId, username, password);
+    }
+
+    /**
+     * Constructs a builder with the required parameters for creating MqttPhysicalAdapterConfiguration.
+     *
+     * @param brokerAddress The address of the MQTT broker.
+     * @param brokerPort    The port of the MQTT broker.
+     * @param clientId      The client ID for connecting to the MQTT broker.
+     * @param accessToken   The access token used for connecting to the MQTT broker
+     * @throws MqttPhysicalAdapterConfigurationException If the provided parameters are invalid.
+     */
+    public MqttPhysicalAdapterConfigurationBuilder(String brokerAddress, int brokerPort, String clientId, String accessToken) throws MqttPhysicalAdapterConfigurationException {
+        if(!isValid(brokerAddress) || !isValid(brokerPort) || !isValid(clientId) || !isValid(accessToken))
+            throw new MqttPhysicalAdapterConfigurationException("Broker Address, Client Id or Access Token cannot be empty strings or null and Broker Port must be a positive number");
+        configuration = new MqttPhysicalAdapterConfiguration(brokerAddress, brokerPort, clientId, accessToken);
+    }
+
+    /**
+     * Constructs a builder with the required parameters for creating MqttPhysicalAdapterConfiguration.
+     *
+     * @param jsonFile      The json file with all the configuration parameters.
+     * @throws MqttPhysicalAdapterConfigurationException If the provided parameters are invalid.
+     */
+    public MqttPhysicalAdapterConfigurationBuilder(File jsonFile) throws MqttPhysicalAdapterConfigurationException {
+        if(!isValid(jsonFile))
+            throw new MqttPhysicalAdapterConfigurationException("Configuration file must exists, must be a file and it must be read.");
+        MqttPhysicalAdapterFileConfiguration fileConfig = getMqttFileConfiguration(jsonFile);
+        if(!isValid(fileConfig.getMqttClientId())) { fileConfig.setMqttClientId("wldt.mqtt.client." + new Random(System.currentTimeMillis()).nextInt()); }
+        if(fileConfig.getAccessToken() != null && !fileConfig.getAccessToken().isEmpty()) {
+            configuration = new MqttPhysicalAdapterConfiguration(fileConfig.getMqttBroker(), fileConfig.getMqttPort(), fileConfig.getMqttClientId(), fileConfig.getAccessToken());
+        } else {
+            configuration = new MqttPhysicalAdapterConfiguration(fileConfig.getMqttBroker(), fileConfig.getMqttPort(), fileConfig.getMqttClientId(), fileConfig.getMqttUsername(), fileConfig.getMqttPassword());
+        }
+        configuration.setBaseTopic(fileConfig.getMqttBaseTopic());
+        try {
+            for (HashMap<String, Object> topicMap : fileConfig.getMqttTopicList()) {
+
+                if(topicMap.get(WLDT_TYPE_MAP).equals(PROPERTY_MAP)) {
+                    if(topicMap.get(FUNCTION_TYPE_MAP).equals(NUMERIC_TYPE_MAP)) {
+                        if(topicMap.get(PROPERTY_INITIAL_VALUE_MAP) instanceof Integer) {
+                            addPhysicalAssetPropertyAndTopic((String) topicMap.get(PROPERTY_KEY_MAP), topicMap.get(PROPERTY_INITIAL_VALUE_MAP), (String) topicMap.get(PROPERTY_TOPIC_MAP), Integer::parseInt);
+                        } else if (topicMap.get(PROPERTY_INITIAL_VALUE_MAP) instanceof Double) {
+                            addPhysicalAssetPropertyAndTopic((String) topicMap.get(PROPERTY_KEY_MAP), topicMap.get(PROPERTY_INITIAL_VALUE_MAP), (String) topicMap.get(PROPERTY_TOPIC_MAP), Double::parseDouble);
+                        }
+                    } else if(topicMap.get(FUNCTION_TYPE_MAP).equals(STRING_TYPE_MAP)) {
+                        addPhysicalAssetPropertyAndTopic((String) topicMap.get(PROPERTY_KEY_MAP), topicMap.get(PROPERTY_INITIAL_VALUE_MAP), (String) topicMap.get(PROPERTY_TOPIC_MAP), String::valueOf);
+                    } else if(topicMap.get(FUNCTION_TYPE_MAP).equals(BOOLEAN_TYPE_MAP)) {
+                        addPhysicalAssetPropertyAndTopic((String) topicMap.get(PROPERTY_KEY_MAP), topicMap.get(PROPERTY_INITIAL_VALUE_MAP), (String) topicMap.get(PROPERTY_TOPIC_MAP), Boolean::parseBoolean);
+                    } else if(topicMap.get(FUNCTION_TYPE_MAP).equals(BYTES_TYPE_MAP)) {
+                        addPhysicalAssetPropertyAndTopic((String) topicMap.get(PROPERTY_KEY_MAP), MqttPhysicalAdapterConfigurationBuilder.parseBytesFromString(String.valueOf(topicMap.get(PROPERTY_INITIAL_VALUE_MAP))), (String) topicMap.get(PROPERTY_TOPIC_MAP), MqttPhysicalAdapterConfigurationBuilder::parseBytesFromString);
+                    } else if(topicMap.get(FUNCTION_TYPE_MAP).equals(JSON_TYPE_MAP)) {
+                        ObjectMapper mapper = new ObjectMapper();
+                        addPhysicalAssetPropertyAndTopic((String) topicMap.get(PROPERTY_KEY_MAP), topicMap.get(PROPERTY_INITIAL_VALUE_MAP), (String) topicMap.get(PROPERTY_TOPIC_MAP), value -> {
+                            try {
+                                return mapper.readTree(value);
+                            } catch (JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    } else {
+                        throw new MqttPhysicalAdapterConfigurationException("Wrong function type passed in file configuration. Property function can be number, string, boolean, bytes or json");
+                    }
+                } else if(topicMap.get(WLDT_TYPE_MAP).equals(EVENT_MAP)) {
+                    if(topicMap.get(FUNCTION_TYPE_MAP).equals(NUMERIC_TYPE_MAP)) {
+                        if(topicMap.get(EVENT_INITIAL_VALUE_MAP) instanceof Integer) {
+                            addPhysicalAssetEventAndTopic((String) topicMap.get(EVENT_KEY_MAP), (String) topicMap.get(EVENT_TYPE_MAP), (String) topicMap.get(EVENT_TOPIC_MAP), Integer::valueOf);
+                        } else if (topicMap.get(EVENT_INITIAL_VALUE_MAP) instanceof Double) {
+                            addPhysicalAssetEventAndTopic((String) topicMap.get(EVENT_KEY_MAP), (String) topicMap.get(EVENT_TYPE_MAP), (String) topicMap.get(EVENT_TOPIC_MAP), Double::valueOf);
+                        }
+                    } else if(topicMap.get(FUNCTION_TYPE_MAP).equals(STRING_TYPE_MAP)) {
+                        addPhysicalAssetEventAndTopic((String) topicMap.get(EVENT_KEY_MAP), (String) topicMap.get(EVENT_TYPE_MAP), (String) topicMap.get(EVENT_TOPIC_MAP), String::valueOf);
+                    } else if(topicMap.get(FUNCTION_TYPE_MAP).equals(BOOLEAN_TYPE_MAP)) {
+                        addPhysicalAssetEventAndTopic((String) topicMap.get(EVENT_KEY_MAP), (String) topicMap.get(EVENT_TYPE_MAP), (String) topicMap.get(EVENT_TOPIC_MAP), Boolean::parseBoolean);
+                    } else if(topicMap.get(FUNCTION_TYPE_MAP).equals(BYTES_TYPE_MAP)) {
+                        addPhysicalAssetEventAndTopic((String) topicMap.get(EVENT_KEY_MAP), (String) topicMap.get(EVENT_TYPE_MAP), (String) topicMap.get(EVENT_TOPIC_MAP), MqttPhysicalAdapterConfigurationBuilder::parseBytesFromString);
+                    } else if(topicMap.get(FUNCTION_TYPE_MAP).equals(JSON_TYPE_MAP)) {
+                        ObjectMapper mapper = new ObjectMapper();
+                        addPhysicalAssetEventAndTopic((String) topicMap.get(EVENT_KEY_MAP), (String) topicMap.get(EVENT_TYPE_MAP), (String) topicMap.get(EVENT_TOPIC_MAP), value -> {
+                            try {
+                                return mapper.readTree(value);
+                            } catch (JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    } else {
+                        throw new MqttPhysicalAdapterConfigurationException("Wrong function type passed in file configuration. Event function can be number, string, boolean, bytes or json");
+                    }
+                } else if(topicMap.get(WLDT_TYPE_MAP).equals(ACTION_MAP)) {
+                    if(topicMap.get(FUNCTION_TYPE_MAP).equals(NUMERIC_TYPE_MAP)) {
+                        if(topicMap.get(ACTION_INITIAL_VALUE_MAP) instanceof Integer) {
+                            addPhysicalAssetActionAndTopic((String) topicMap.get(ACTION_KEY_MAP), (String) topicMap.get(ACTION_TYPE_MAP), (String) topicMap.get(ACTION_CONTENT_TYPE_MAP), (String) topicMap.get(ACTION_TOPIC_MAP), value -> Integer.toString((int) value));
+                        } else if (topicMap.get(ACTION_INITIAL_VALUE_MAP) instanceof Double) {
+                            addPhysicalAssetActionAndTopic((String) topicMap.get(ACTION_KEY_MAP), (String) topicMap.get(ACTION_TYPE_MAP), (String) topicMap.get(ACTION_CONTENT_TYPE_MAP), (String) topicMap.get(ACTION_TOPIC_MAP), value -> Double.toString((double) value));
+                        }
+                    } else if(topicMap.get(FUNCTION_TYPE_MAP).equals(STRING_TYPE_MAP)) {
+                        addPhysicalAssetActionAndTopic((String) topicMap.get(ACTION_KEY_MAP), (String) topicMap.get(ACTION_TYPE_MAP), (String) topicMap.get(ACTION_CONTENT_TYPE_MAP), (String) topicMap.get(ACTION_TOPIC_MAP), String::toString);
+                    } else if(topicMap.get(FUNCTION_TYPE_MAP).equals(BOOLEAN_TYPE_MAP)) {
+                        addPhysicalAssetActionAndTopic((String) topicMap.get(ACTION_KEY_MAP), (String) topicMap.get(ACTION_TYPE_MAP), (String) topicMap.get(ACTION_CONTENT_TYPE_MAP), (String) topicMap.get(ACTION_TOPIC_MAP), value -> Boolean.toString((boolean) value));
+                    } else if(topicMap.get(FUNCTION_TYPE_MAP).equals(BYTES_TYPE_MAP)) {
+                        addPhysicalAssetActionAndTopic((String) topicMap.get(ACTION_KEY_MAP), (String) topicMap.get(ACTION_TYPE_MAP), (String) topicMap.get(ACTION_CONTENT_TYPE_MAP), (String) topicMap.get(ACTION_TOPIC_MAP),  MqttPhysicalAdapterConfigurationBuilder::fromStringToBytes);
+                    } else if(topicMap.get(FUNCTION_TYPE_MAP).equals(JSON_TYPE_MAP)) {
+                        addPhysicalAssetActionAndTopic((String) topicMap.get(ACTION_KEY_MAP), (String) topicMap.get(ACTION_TYPE_MAP), (String) topicMap.get(ACTION_CONTENT_TYPE_MAP), (String) topicMap.get(ACTION_TOPIC_MAP),  ObjectNode::toString);
+                    } else {
+                        throw new MqttPhysicalAdapterConfigurationException("Wrong function type passed in file configuration. Action function can be number, string, boolean, bytes or json");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new MqttPhysicalAdapterConfigurationException("Error occurred during topic list read in configuration file.");
+        }
+    }
+
+    /**
+     * Transform a String Byte Array in a byte[]
+     *
+     * @param intArrayString Is the Bytes Array in String
+     * @return a byte[] representing the initial Byte Array in String
+     */
+    private static byte[] parseBytesFromString(String intArrayString) {
+
+        if (intArrayString.trim().equals("[]")) {
+            return new byte[0]; // Return an empty byte array
+        }
+
+        try {
+            // Remove square brackets and split the string
+            String cleanedString = intArrayString.replaceAll("[\\[\\]]", ""); // Remove square brackets
+            String[] intStrings = cleanedString.split(","); // Split by comma
+
+            // Convert to byte array
+            byte[] byteArray = new byte[intStrings.length];
+            for (int i = 0; i < intStrings.length; i++) {
+                byteArray[i] = (byte) Integer.parseInt(intStrings[i].trim());
+            }
+
+            return byteArray;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Input string contains invalid integers.", e);
+        }
+    }
+
+    /**
+     * Transform a Byte Array in a String
+     *
+     * @param byteArray Is the Bytes Array
+     * @return a String representing the initial Byte Array
+     */
+    private static String fromStringToBytes(byte[] byteArray) {
+        if (byteArray.length == 0) {
+            return "[]"; // Return an empty array representation
+        }
+
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < byteArray.length; i++) {
+            sb.append(byteArray[i] & 0xFF); // Ensure the byte is treated as unsigned
+            if (i < byteArray.length - 1) {
+                sb.append(", ");
+            }
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
     /**
@@ -178,6 +385,22 @@ public class MqttPhysicalAdapterConfigurationBuilder {
         checkTopicAndFunction(topic.getTopic(), topic.getPublishFunction(), this.configuration.getOutgoingTopics().values().stream().map(MqttTopic::getTopic).collect(Collectors.toList()));
         configuration.addOutgoingTopic(actionKey, topic);
         return addPhysicalAssetAction(actionKey, type, contentType);
+    }
+
+    /**
+     * Read a json File and store data inside a MqttPhysicalAdapterFileConfiguration class which is returned.
+     *
+     * @param jsonFile is the File that must be read to get configuration.
+     * @return an MqttPhysicalAdapterFileConfiguration that contains all the config info inside the File.
+     * @throws MqttPhysicalAdapterConfigurationException If there is a configuration error.
+     */
+    private MqttPhysicalAdapterFileConfiguration getMqttFileConfiguration(File jsonFile) throws MqttPhysicalAdapterConfigurationException {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(jsonFile, MqttPhysicalAdapterFileConfiguration.class);
+        } catch (Exception e) {
+            throw new MqttPhysicalAdapterConfigurationException("Error occurred when reading mqtt physical adapter configuration file.");
+        }
     }
 
     /**
@@ -328,5 +551,15 @@ public class MqttPhysicalAdapterConfigurationBuilder {
      */
     private boolean isValid(int param){
         return param > 0;
+    }
+
+    /**
+     * Checks if the given file parameter is valid (exists, is a file, can be read).
+     *
+     * @param param The file parameter to be checked.
+     * @return true if the file exists, is a file and can be read.
+     */
+    private boolean isValid(File param){
+        return param.exists() && param.isFile() && param.canRead();
     }
 }

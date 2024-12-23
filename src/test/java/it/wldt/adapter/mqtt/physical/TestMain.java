@@ -1,6 +1,9 @@
 package it.wldt.adapter.mqtt.physical;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.sun.org.apache.xpath.internal.operations.Number;
+import it.wldt.adapter.mqtt.physical.model.MqttPhysicalAdapterFileConfiguration;
 import it.wldt.adapter.mqtt.physical.topic.MqttQosLevel;
 import it.wldt.adapter.mqtt.physical.topic.incoming.DigitalTwinIncomingTopic;
 import it.wldt.adapter.mqtt.physical.topic.incoming.MqttSubscribeFunction;
@@ -13,6 +16,8 @@ import it.wldt.core.engine.DigitalTwin;
 import it.wldt.core.engine.DigitalTwinEngine;
 import it.wldt.core.event.WldtEvent;
 import it.wldt.exception.*;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -28,11 +33,16 @@ public class TestMain {
             ConsoleDigitalAdapter consoleDigitalAdapter = new ConsoleDigitalAdapter();
 
             // Create an instance of MqttPhysical Adapter Configuration
-            MqttPhysicalAdapterConfiguration config = MqttPhysicalAdapterConfiguration.builder("127.0.0.1", 1883)
-                    .addPhysicalAssetPropertyAndTopic("intensity", 0, "sensor/intensity", Integer::parseInt)
-                    .addIncomingTopic(new DigitalTwinIncomingTopic("sensor/state", getSensorStateFunction()), createIncomingTopicRelatedPropertyList(), new ArrayList<>())
-                    .addPhysicalAssetEventAndTopic("overheating", "text/plain", "sensor/overheating", Function.identity())
-                    .addPhysicalAssetActionAndTopic("switch-off", "sensor.actuation", "text/plain", "sensor/actions/switch", actionBody -> "switch" + actionBody)
+//            MqttPhysicalAdapterConfiguration config = MqttPhysicalAdapterConfiguration.builder("127.0.0.1", 1883)
+//                    .addPhysicalAssetPropertyAndTopic("intensity", 0, "sensor/intensity", Integer::parseInt)
+//                    .addIncomingTopic(new DigitalTwinIncomingTopic("sensor/state", getSensorStateFunction()), createIncomingTopicRelatedPropertyList(), new ArrayList<>())
+//                    .addPhysicalAssetEventAndTopic("overheating", "text/plain", "sensor/overheating", Function.identity())
+//                    .addPhysicalAssetActionAndTopic("switch-off", "sensor.actuation", "text/plain", "sensor/actions/switch", actionBody -> "switch" + actionBody)
+//                    .build();
+
+            File jsonFile = new File("src/test/config/MqttPhysicalAdapterConfiguration.json");
+            MqttPhysicalAdapterConfiguration config = MqttPhysicalAdapterConfiguration.builder(jsonFile)
+                    //.addIncomingTopic(new DigitalTwinIncomingTopic("state", getSensorStateFunction()), createIncomingTopicRelatedPropertyList(), new ArrayList<>())
                     .build();
 
 
@@ -56,6 +66,7 @@ public class TestMain {
             //      .addOutgoingTopic("switch-off", new ActionOutgoingTopic<String>("sensor/switch", actionEventBody -> "switch-"+actionEventBody));
 
             // Create an Instance of the MQTT Physical Adapter using the defined configuration
+            //config.setMqttV5Flag(true);
             MqttPhysicalAdapter mqttPhysicalAdapter = new MqttPhysicalAdapter("test-mqtt-pa", config);
 
             //Add both Digital and Physical Adapters to the DT
@@ -73,12 +84,18 @@ public class TestMain {
 
             Thread.sleep(2000);
 
-            consoleDigitalAdapter.invokeAction("switch-off", "off");
 
-        }catch (Exception e){
+            ObjectMapper mapper = new ObjectMapper();
+            consoleDigitalAdapter.invokeAction("action-integer", 1);
+            consoleDigitalAdapter.invokeAction("action-double", 2.0);
+            consoleDigitalAdapter.invokeAction("action-boolean", true);
+            consoleDigitalAdapter.invokeAction("action-string", "switch-off");
+            consoleDigitalAdapter.invokeAction("action-json", mapper.readTree("{\"json\": \"example\"}"));
+            consoleDigitalAdapter.invokeAction("action-bytes", new byte[] {10, 20, 30, 40, 50});
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     private static List<PhysicalAssetProperty<?>> createIncomingTopicRelatedPropertyList(){
