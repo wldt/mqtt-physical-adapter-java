@@ -171,9 +171,7 @@ public class MqttPhysicalAdapter extends ConfigurablePhysicalAdapter<MqttPhysica
 
         if(getConfiguration().isMqttV5Flag()) {
             try {
-                System.out.println("Trying to subscribe to topic: " + topic.getTopic());
                 mqttClientV5.subscribe(getConfiguration().getBaseTopic() + topic.getTopic(), topic.getQos());
-                System.out.println("Subscribed to topic: " + topic.getTopic());
             } catch (org.eclipse.paho.mqttv5.common.MqttException ex) {
                 ex.printStackTrace();
             }
