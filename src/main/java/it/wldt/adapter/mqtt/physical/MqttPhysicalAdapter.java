@@ -15,12 +15,14 @@ import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.mqttv5.client.*;
+import org.eclipse.paho.mqttv5.client.IMqttMessageListener;
 import org.eclipse.paho.mqttv5.client.IMqttToken;
 import org.eclipse.paho.mqttv5.client.MqttCallback;
 import org.eclipse.paho.mqttv5.common.packet.MqttProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -169,20 +171,9 @@ public class MqttPhysicalAdapter extends ConfigurablePhysicalAdapter<MqttPhysica
 
         if(getConfiguration().isMqttV5Flag()) {
             try {
-                mqttClientV5.subscribe(getConfiguration().getBaseTopic() + topic.getTopic(), topic.getQos(), (t, msg) ->{
-                    List<? extends WldtEvent<?>> wldtEvents = topic.applySubscribeFunction(new String(msg.getPayload()));
-                    wldtEvents.forEach(e -> {
-                        try {
-                            if(e instanceof PhysicalAssetEventWldtEvent){
-                                publishPhysicalAssetEventWldtEvent((PhysicalAssetEventWldtEvent<?>) e);
-                            }else if(e instanceof PhysicalAssetPropertyWldtEvent){
-                                publishPhysicalAssetPropertyWldtEvent((PhysicalAssetPropertyWldtEvent<?>) e);
-                            }
-                        } catch (EventBusException ex) {
-                            ex.printStackTrace();
-                        }
-                    });
-                });
+                System.out.println("Trying to subscribe to topic: " + topic.getTopic());
+                mqttClientV5.subscribe(getConfiguration().getBaseTopic() + topic.getTopic(), topic.getQos());
+                System.out.println("Subscribed to topic: " + topic.getTopic());
             } catch (org.eclipse.paho.mqttv5.common.MqttException ex) {
                 ex.printStackTrace();
             }
@@ -233,8 +224,30 @@ public class MqttPhysicalAdapter extends ConfigurablePhysicalAdapter<MqttPhysica
                     }
 
                     @Override
-                    public void messageArrived(String s, org.eclipse.paho.mqttv5.common.MqttMessage mqttMessage) throws Exception {
-
+                    public void messageArrived(String s, org.eclipse.paho.mqttv5.common.MqttMessage msg) throws Exception {
+                        DigitalTwinIncomingTopic topic = null;
+                        for(DigitalTwinIncomingTopic topic1 : getConfiguration().getIncomingTopics()) {
+                            if((getConfiguration().getBaseTopic() + topic1.getTopic()).equals(s)){
+                                topic = topic1;
+                                break;
+                            }
+                        }
+                        if(topic == null){
+                            logger.error("MQTT Physical Adapter - A message arrived on a subscribed topic but topic was not found in IncomingTopicList");
+                            return;
+                        }
+                        List<? extends WldtEvent<?>> wldtEvents = topic.applySubscribeFunction(new String(msg.getPayload()));
+                        wldtEvents.forEach(e -> {
+                            try {
+                                if(e instanceof PhysicalAssetEventWldtEvent){
+                                    publishPhysicalAssetEventWldtEvent((PhysicalAssetEventWldtEvent<?>) e);
+                                }else if(e instanceof PhysicalAssetPropertyWldtEvent){
+                                    publishPhysicalAssetPropertyWldtEvent((PhysicalAssetPropertyWldtEvent<?>) e);
+                                }
+                            } catch (EventBusException ex) {
+                                ex.printStackTrace();
+                            }
+                        });
                     }
 
                     @Override
